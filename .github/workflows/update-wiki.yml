@@ -1,0 +1,51 @@
+name: Publish Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'wiki/**'
+
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-wiki:
+    runs-on: ubuntu-24.04
+    name: Push wiki/ content to GitHub Wiki
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Push wiki content to GitHub Wiki
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+
+          # Clone the wiki repository (GitHub creates it automatically once
+          # the Wiki tab has been initialised on the repo settings page).
+          WIKI_REPO="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git"
+          git clone "${WIKI_REPO}" wiki-repo
+
+          # Copy every markdown file from wiki/ into the cloned wiki repo.
+          cp wiki/*.md wiki-repo/
+
+          cd wiki-repo
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Only commit when there are actual changes.
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No wiki changes to publish."
+            exit 0
+          fi
+
+          git add .
+          git commit -m "docs(wiki): sync from repository wiki/ [skip ci]"
+          git push

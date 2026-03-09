@@ -7,6 +7,10 @@
 # Tell git to not diff certain files
 *.svg -diff
 
+# Markdown files legitimately use trailing spaces (line-break syntax);
+# disable the trailing-whitespace diff check for them.
+*.md whitespace=-blank-at-eol
+
 # Tell linguist that generated test pattern files should not be included in the
 # language statistics.
 *.pat linguist-generated
