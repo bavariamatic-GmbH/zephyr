@@ -1,8 +1,8 @@
 # Microchip SmartFusion2 FPGA — Driver Support
 
-> **Status:** 🟡 In Progress  
-> **Last Updated:** 2026-03-09  
-> **Subsystem(s):** GPIO, SPI, UART  
+> **Status:** 🟡 In Progress
+> **Last Updated:** 2026-03-09
+> **Subsystem(s):** GPIO, SPI, UART
 
 ---
 
