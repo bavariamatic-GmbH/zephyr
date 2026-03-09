@@ -28,24 +28,35 @@ jobs:
         run: |
           set -e
 
-          # Clone the wiki repository (GitHub creates it automatically once
-          # the Wiki tab has been initialised on the repo settings page).
           WIKI_REPO="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git"
-          git clone "${WIKI_REPO}" wiki-repo
 
-          # Copy every markdown file from wiki/ into the cloned wiki repo.
-          cp wiki/*.md wiki-repo/
-
+          # Set up a local mirror of the wiki.  On the very first run the wiki
+          # git repository does not yet exist on GitHub; the push below will
+          # create it automatically.
+          git init -b master wiki-repo
           cd wiki-repo
+          git remote add origin "${WIKI_REPO}"
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Only commit when there are actual changes.
-          if git diff --quiet && git diff --cached --quiet; then
+          # If the wiki already has commits, fetch them so we build on top of
+          # the existing history and avoid a force-push that discards old pages.
+          if git fetch origin master 2>/dev/null; then
+            git reset --hard origin/master
+            echo "Fetched existing wiki history."
+          else
+            echo "Wiki is empty or does not exist yet – creating from scratch."
+          fi
+
+          # Copy every markdown file from wiki/ into the local wiki repo.
+          cp ../wiki/*.md .
+
+          # Stage all changes; skip the push when nothing has changed.
+          git add .
+          if git diff --cached --quiet; then
             echo "No wiki changes to publish."
             exit 0
           fi
 
-          git add .
           git commit -m "docs(wiki): sync from repository wiki/ [skip ci]"
-          git push
+          git push origin HEAD:master
